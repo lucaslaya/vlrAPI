@@ -1,3 +1,11 @@
+# TODO
+# - vlr_upcoming
+#   - Add tourney url
+# - vlr_match
+#   - missing data to add to scrape and add to json
+#       - stream, vods
+#       - overview, performance, economy, comments 
+
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -11,16 +19,165 @@ def getSoup(url):
 
 class Vlr:
 
-    def vlr_match(self, match_id=68326):
+    def vlr_match(self, match_id=51276):
         url = f'https://www.vlr.gg/{match_id}'
         soup, status = getSoup(url)
         print(f'vlr_match status: {status}')
 
         base_container = soup.find(id="wrapper")
         base = base_container.find("div", {"class": "col mod-3"})
-       
 
+        # Match date, time, patch
+        date_time_patch_container = base.find("div", {"class": "match-header-date"})
+        date_time_container = date_time_patch_container.find_all("div", {"class": "moment-tz-convert"})
 
+        date = date_time_container[0].get_text().strip()
+        time = date_time_container[1].get_text().strip()
+        patch = (
+            date_time_patch_container.find("div", {"style": "font-style: italic;"})
+            .get_text()
+            .strip()
+        )
+
+        #print(date)
+        #print(time)
+        #print(patch)
+
+        # Tourney data
+        tourney_container = base.find("a", {"class": "match-header-event"})
+        tourney_url = tourney_container["href"]
+
+        tourney_icon = tourney_container.find("img")["src"]
+        tourney_icon = f"https:{tourney_icon}"
+
+        tourney = (
+            tourney_container.find("div", {"style": "font-weight: 700;"})
+            .get_text()
+            .strip()
+        )
+        tourney_round = (
+            tourney_container.find("div", {"class": "match-header-event-series"})
+            .get_text()
+            .strip()
+        )
+        tourney_round = tourney_round.replace('\n', '')
+        tourney_round = tourney_round.replace('\t', '')
+
+        #print(tourney)
+        #print(tourney_icon)
+        #print(tourney_round)
+        #print(tourney_url)
+
+        team_container = base.find_all("a", {"class": "match-header-link"})
+        
+        # Team 1
+        team1_container = team_container[0]
+        
+        team1_url = team1_container["href"]
+        
+        team1_icon = team1_container.find("img")["src"]
+        team1_icon = f"https:{team1_icon}"
+
+        team1_name = (
+            team1_container.find("div", {"class": "wf-title-med"})
+            .get_text()
+            .strip()
+        )
+        team1_elo = (
+            team1_container.find("div", {"class": "match-header-link-name-elo"})
+            .get_text()
+            .strip()
+        )
+
+        #print(team1_name)
+        #print(team1_elo)
+        #print(team1_icon)
+        #print(team1_url)
+
+        # Team 2
+        team2_container = team_container[1]
+        
+        team2_url = team2_container["href"]
+        
+        team2_icon = team2_container.find("img")["src"]
+        team2_icon = f"https:{team2_icon}"
+
+        team2_name = (
+            team2_container.find("div", {"class": "wf-title-med"})
+            .get_text()
+            .strip()
+        )
+        team2_elo = (
+            team2_container.find("div", {"class": "match-header-link-name-elo"})
+            .get_text()
+            .strip()
+        )
+
+        #print(team2_name)
+        #print(team2_elo)
+        #print(team2_icon)
+        #print(team2_url)
+
+        # Match status, score, format
+        status_score_format_container = base.find("div", {"class": "match-header-vs-score"})
+        status_format_container = base.find_all("div", {"class": "match-header-vs-note"})
+
+        match_status = status_format_container[0].get_text().strip()
+        match_format = status_format_container[1].get_text().strip()
+
+        score_container = status_score_format_container.find("div", {"class": "js-spoiler"})
+        scores = score_container.get_text().strip()
+        scores = scores.replace('\n', '')
+        scores = scores.replace('\t', '')
+
+        team1_score, team2_score = scores.split(':',1)
+
+        #print(match_status)
+        #print(match_format)
+        #print(team1_score)
+        #print(team2_score)
+
+        overview = performance = economy = comments = []
+ 
+#        data = {
+#            "match_info": {
+#                "date": date,
+#                "time": time,
+#                "status": match_status,
+#                "patch": patch,
+#                "tourney": tourney,
+#                "tourney_round": tourney_round,
+#                "tourney_icon": tourney_icon,
+#                "tourney_url": tourney_url,
+#                "format": match_format,
+#                "stream": stream,
+#                "vods": vods
+#            },
+#            "match_stats": {
+#                "team1": team1_name,
+#                "team1_elo": team1_elo,
+#                "team1_score": team1_score,
+#                "team2": team2_name,
+#                "team2_elo": team2_elo,
+#                "team2_score": team2_score,
+#                "team1_icon": team1_icon,
+#                "team2_icon": team2_icon,
+#                "team1_url": team1_url,
+#                "team2_url": team2_url,
+#                "overview": overview,
+#                "performance": performance,
+#                "economy": economy
+#            },
+#            "comments": comments
+#        }
+
+#        json_string = json.dumps(data, sort_keys=True, indent=2)
+        
+#        with open('vlr_match.json', 'w') as outfile:
+#            outfile.write(json_string)
+
+#        return json_string
+        
 
     # 50 items per page on vlr.gg
     def vlr_upcoming(self, page=1):
@@ -161,7 +318,7 @@ class Vlr:
 
 VLR = Vlr()
 
-#VLR.vlr_match()
+VLR.vlr_match()
 
-output = VLR.vlr_upcoming()
+#output = VLR.vlr_upcoming()
 #print(output)
