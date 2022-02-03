@@ -27,8 +27,11 @@ class Vlr:
 #| |  | | (_| | || (__| | | |
 #|_|  |_|\__,_|\__\___|_| |_|
 
-    def vlr_match(self, match_id=51276):
-        url = f'https://www.vlr.gg/{match_id}'
+    def vlr_match(self, match_id=66842):
+        team1_score = '-'
+        team2_score = '-'
+
+        url = f'https://www.vlr.gg/{match_id}/?game=all&tab=overview'
         soup, status = getSoup(url)
         print(f'vlr_match status: {status}')
 
@@ -46,10 +49,6 @@ class Vlr:
             .get_text()
             .strip()
         )
-
-        #print(date)
-        #print(time)
-        #print(patch)
 
         # Tourney data
         tourney_container = base.find("a", {"class": "match-header-event"})
@@ -70,11 +69,6 @@ class Vlr:
         )
         tourney_round = tourney_round.replace('\n', '')
         tourney_round = tourney_round.replace('\t', '')
-
-        #print(tourney)
-        #print(tourney_icon)
-        #print(tourney_round)
-        #print(tourney_url)
 
         team_container = base.find_all("a", {"class": "match-header-link"})
         
@@ -97,11 +91,6 @@ class Vlr:
             .strip()
         )
 
-        #print(team1_name)
-        #print(team1_elo)
-        #print(team1_icon)
-        #print(team1_url)
-
         # Team 2
         team2_container = team_container[1]
         
@@ -121,11 +110,6 @@ class Vlr:
             .strip()
         )
 
-        #print(team2_name)
-        #print(team2_elo)
-        #print(team2_icon)
-        #print(team2_url)
-
         # Match status, score, format
         status_score_format_container = base.find("div", {"class": "match-header-vs-score"})
         status_format_container = base.find_all("div", {"class": "match-header-vs-note"})
@@ -134,63 +118,247 @@ class Vlr:
         match_format = status_format_container[1].get_text().strip()
 
         score_container = status_score_format_container.find("div", {"class": "js-spoiler"})
-        scores = score_container.get_text().strip()
-        scores = scores.replace('\n', '')
-        scores = scores.replace('\t', '')
+        if score_container:
+            scores = score_container.get_text().strip()
+            scores = scores.replace('\n', '')
+            scores = scores.replace('\t', '')
 
-        team1_score, team2_score = scores.split(':',1)
-
-        #print(match_status)
-        #print(match_format)
-        #print(team1_score)
-        #print(team2_score)
-
-        overview = performance = economy = comments = vods = []
+            team1_score, team2_score = scores.split(':',1)
 
         # Streams
         streams = []
-        stream_container = base.find("div", {"class": "match-streams-container"})
+        stream_container = base.find("div", {"class": "match-streams"})
 
         other_streams = stream_container.find_all("div", {"class": "wf-card"})
 
-        for module in other_streams:
-            stream_url = module.find("a").get("href")
-            stream_name = module.get_text().strip()
+        other_streams_text = other_streams[0].get_text().strip()
+        other_streams_text = other_streams_text.replace('\n', '')
+        other_streams_text = other_streams_text.replace('\t', '')
 
-            stream_flag_container = module.find("i")
-            stream_flag_dirty = stream_flag_container["class"]
-            stream_flag = stream_flag_dirty[0] + '_' + stream_flag_dirty[1].replace("mod-", "")
+        if other_streams_text != "No stream available":
+            for module in other_streams:
+                stream_url = module.find("a").get("href")
+                stream_name = module.get_text().strip()
 
-            streams.append(
-                {
-                    "name": stream_name,
-                    "flag": stream_flag,
-                    "url": stream_url,
-                    "type": "twitch / other"
-                }
-            )
+                stream_flag_container = module.find("i")
+                stream_flag_dirty = stream_flag_container["class"]
+                stream_flag = stream_flag_dirty[0] + '_' + stream_flag_dirty[1].replace("mod-", "")
+
+                streams.append(
+                    {
+                        "name": stream_name,
+                        "flag": stream_flag,
+                        "url": stream_url,
+                        "type": "twitch / other"
+                    }
+                )
 
         yt_streams = stream_container.find_all("a", {"class": "wf-card"})
 
-        for i in range(len(yt_streams)):
-            if yt_streams[i].get("href") == None:
-                temp = i
-        yt_streams.pop(temp)
+        if yt_streams:
+            for i in range(len(yt_streams)):
+                if yt_streams[i].get("href") == None:
+                    temp = i
+            yt_streams.pop(temp)
 
-        for module in yt_streams:
-            stream_url = module.get("href")
-            stream_name = module.get_text().strip()
+            for module in yt_streams:
+                stream_url = module.get("href")
+                stream_name = module.get_text().strip()
 
-            stream_flag_container = module.find("i")
-            stream_flag_dirty = stream_flag_container["class"]
-            stream_flag = stream_flag_dirty[0] + '_' + stream_flag_dirty[1].replace("mod-", "")
+                stream_flag_container = module.find("i")
+                stream_flag_dirty = stream_flag_container["class"]
+                stream_flag = stream_flag_dirty[0] + '_' + stream_flag_dirty[1].replace("mod-", "")
 
-            streams.append(
+                streams.append(
+                    {
+                        "name": stream_name,
+                        "flag": stream_flag,
+                        "url": stream_url,
+                        "type": "youtube"
+                    }
+                )
+
+        # Vods
+        vods = []
+        vods_container = base.find("div", {"class": "match-vods"})
+        all_vods = vods_container.find_all("a", {"class": "wf-card"})
+
+        for module in all_vods:
+            vods_url = module.get("href")
+            vods_name = module.get_text().strip()
+
+            vods.append(
                 {
-                    "name": stream_name,
-                    "flag": stream_flag,
-                    "url": stream_url,
-                    "type": "youtube"
+                    "name": vods_name,
+                    "url": vods_url
+                }
+            )
+
+        #  ___ _        _      
+        # / __| |_ __ _| |_ ___
+        # \__ \  _/ _` |  _(_-<
+        # |___/\__\__,_|\__/__/
+
+        # Overview
+        overview = []
+        game = []
+        game_names = []
+
+        team1_players = []
+        team2_players = []
+
+        games_container = base.find("div", {"class": "vm-stats-gamesnav-container"})
+        games = games_container.find_all("div", {"class": "vm-stats-gamesnav-item"})
+        for module in games:
+            module_text = module.get_text().strip()
+            module_text = module_text.replace('\n', '')
+            module_text = module_text.replace('\t', '')
+            if module_text == '3N/A':
+                continue
+            else:
+                module_text = ''.join([i for i in module_text if not i.isdigit()])
+                game_names.append(module_text)
+
+            game.append(module.get("data-game-id"))
+
+        tab = 'overview'
+
+        for i in range(len(game)):
+            url = f'https://www.vlr.gg/{match_id}/?game={game[i]}&tab={tab}'
+            soup_stats, status_stats = getSoup(url)
+
+            base_container_stats = soup_stats.find(id="wrapper")
+            base_stats = base_container_stats.find("div", {"class": "col mod-3"})
+
+            game_map = game_names[i]
+
+            player_stats_container = base_stats.find("div", {"class": "vm-stats-container"})
+            player_stats = player_stats_container.find_all("table", {"class": "wf-table-inset"})
+
+            # Team 1
+            team1_stats_body = player_stats[0].find("tbody")
+            team1_stats = team1_stats_body.find_all("tr")
+
+            for module in team1_stats:
+                player_name_team_container = module.find("td", {"class": "mod-player"})
+                player_name_team = player_name_team_container.find("a")
+                
+                player_url = player_name_team.get("href")
+                
+                player_name_team_dirty = player_name_team.get_text().strip()
+                player_name_team_dirty = player_name_team_dirty.replace('\n', '')
+                player_name_team_dirty = player_name_team_dirty.replace('\t', '')
+                
+                player_name, player_team = player_name_team_dirty.split(' ',1)
+
+                player_flag_container = player_name_team_container.find("i")
+                player_flag_dirty = player_flag_container["class"]
+                player_flag = player_flag_dirty[0] + '_' + player_flag_dirty[1].replace("mod-", "")
+
+                team1_stats_container = module.find_all("td", {"class": "mod-stat"})
+
+                player_acs = team1_stats_container[0].get_text().strip()
+                player_kills = team1_stats_container[1].get_text().strip()
+                player_deaths = team1_stats_container[2].get_text().strip()
+                player_deaths = player_deaths.replace("/", "")
+                player_assists = team1_stats_container[3].get_text().strip()
+                player_plus_minus = team1_stats_container[4].get_text().strip()
+                player_kast = team1_stats_container[5].get_text().strip()
+                player_adr = team1_stats_container[6].get_text().strip()
+                player_hs = team1_stats_container[7].get_text().strip()
+                player_first_kills = team1_stats_container[8].get_text().strip()
+                player_first_deaths = team1_stats_container[9].get_text().strip()
+                player_first_plus_minus = team1_stats_container[10].get_text().strip()
+
+                team1_players.append(
+                    {
+                        "name": player_name,
+                        "team": player_team,
+                        "flag": player_flag,
+                        "url": player_url,
+                        #"agents": player_agents,
+                        "acs": player_acs,
+                        "kills": player_kills,
+                        "deaths": player_deaths,
+                        "assists": player_assists,
+                        "+/-": player_plus_minus,
+                        "kast": player_kast,
+                        "adr": player_adr,
+                        "hs%": player_hs,
+                        "first_kills": player_first_kills,
+                        "first_deaths": player_first_deaths,
+                        "first_+/-": player_first_plus_minus
+                    }
+                )
+
+            # Team 2
+            team2_stats_body = player_stats[1].find("tbody")
+            team2_stats = team2_stats_body.find_all("tr")
+
+            for module in team2_stats:
+                player_name_team_container = module.find("td", {"class": "mod-player"})
+                player_name_team = player_name_team_container.find("a")
+                
+                player_url = player_name_team.get("href")
+                
+                player_name_team_dirty = player_name_team.get_text().strip()
+                player_name_team_dirty = player_name_team_dirty.replace('\n', '')
+                player_name_team_dirty = player_name_team_dirty.replace('\t', '')
+                
+                player_name, player_team = player_name_team_dirty.split(' ',1)
+
+                player_flag_container = player_name_team_container.find("i")
+                player_flag_dirty = player_flag_container["class"]
+                player_flag = player_flag_dirty[0] + '_' + player_flag_dirty[1].replace("mod-", "")
+
+                team2_stats_container = module.find_all("td", {"class": "mod-stat"})
+
+                player_acs = team2_stats_container[0].get_text().strip()
+                player_kills = team2_stats_container[1].get_text().strip()
+                player_deaths = team2_stats_container[2].get_text().strip()
+                player_deaths = player_deaths.replace("/", "")
+                player_assists = team2_stats_container[3].get_text().strip()
+                player_plus_minus = team2_stats_container[4].get_text().strip()
+                player_kast = team2_stats_container[5].get_text().strip()
+                player_adr = team2_stats_container[6].get_text().strip()
+                player_hs = team2_stats_container[7].get_text().strip()
+                player_first_kills = team2_stats_container[8].get_text().strip()
+                player_first_deaths = team2_stats_container[9].get_text().strip()
+                player_first_plus_minus = team2_stats_container[10].get_text().strip()
+
+                team2_players.append(
+                    {
+                        "name": player_name,
+                        "team": player_team,
+                        "flag": player_flag,
+                        "url": player_url,
+                        #"agents": player_agents,
+                        "acs": player_acs,
+                        "kills": player_kills,
+                        "deaths": player_deaths,
+                        "assists": player_assists,
+                        "+/-": player_plus_minus,
+                        "kast": player_kast,
+                        "adr": player_adr,
+                        "hs%": player_hs,
+                        "first_kills": player_first_kills,
+                        "first_deaths": player_first_deaths,
+                        "first_+/-": player_first_plus_minus
+                    }
+                )
+
+            # Bad solution - for loop is broken 
+            # Function above only outputs info from map 1
+            # Outputs all info 3 times
+            while len(team1_players) > 5: 
+                team1_players.pop()
+                team2_players.pop()
+
+            overview.append(
+                {
+                    "map": game_map,
+                    "team1_players": team1_players,
+                    "team2_players": team2_players
                 }
             )
  
@@ -220,10 +388,10 @@ class Vlr:
                 "team1_url": team1_url,
                 "team2_url": team2_url,
                 "overview": overview,
-                "performance": performance,
-                "economy": economy
+                #"performance": performance,
+                #"economy": economy
             },
-            "comments": comments
+            #"comments": comments
         }
 
         json_string = json.dumps(data, sort_keys=False, indent=4)
