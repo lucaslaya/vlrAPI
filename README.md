@@ -1,6 +1,6 @@
 # vlrAPI
 
-vlrAPI is a python web-scraping application for vlr.gg
+vlrAPI is a python web-scraping application for vlr.gg to get data from the site for other uses.
 
 ## Endpoints
 
