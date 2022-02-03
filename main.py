@@ -137,46 +137,46 @@ class Vlr:
         #print(team1_score)
         #print(team2_score)
 
-        overview = performance = economy = comments = []
+        overview = performance = economy = comments = streams = vods = []
  
-#        data = {
-#            "match_info": {
-#                "date": date,
-#                "time": time,
-#                "status": match_status,
-#                "patch": patch,
-#                "tourney": tourney,
-#                "tourney_round": tourney_round,
-#                "tourney_icon": tourney_icon,
-#                "tourney_url": tourney_url,
-#                "format": match_format,
-#                "stream": stream,
-#                "vods": vods
-#            },
-#            "match_stats": {
-#                "team1": team1_name,
-#                "team1_elo": team1_elo,
-#                "team1_score": team1_score,
-#                "team2": team2_name,
-#                "team2_elo": team2_elo,
-#                "team2_score": team2_score,
-#                "team1_icon": team1_icon,
-#                "team2_icon": team2_icon,
-#                "team1_url": team1_url,
-#                "team2_url": team2_url,
-#                "overview": overview,
-#                "performance": performance,
-#                "economy": economy
-#            },
-#            "comments": comments
-#        }
+        data = {
+            "match_info": {
+                "date": date,
+                "time": time,
+                "status": match_status,
+                "patch": patch,
+                "tourney": tourney,
+                "tourney_round": tourney_round,
+                "tourney_icon": tourney_icon,
+                "tourney_url": tourney_url,
+                "format": match_format,
+                "streams": streams,
+                "vods": vods
+            },
+            "match_stats": {
+                "team1": team1_name,
+                "team1_elo": team1_elo,
+                "team1_score": team1_score,
+                "team2": team2_name,
+                "team2_elo": team2_elo,
+                "team2_score": team2_score,
+                "team1_icon": team1_icon,
+                "team2_icon": team2_icon,
+                "team1_url": team1_url,
+                "team2_url": team2_url,
+                "overview": overview,
+                "performance": performance,
+                "economy": economy
+            },
+            "comments": comments
+        }
 
-#        json_string = json.dumps(data, sort_keys=True, indent=2)
+        json_string = json.dumps(data, sort_keys=False, indent=4)
         
-#        with open('vlr_match.json', 'w') as outfile:
-#            outfile.write(json_string)
+        with open('vlr_match.json', 'w') as outfile:
+            outfile.write(json_string)
 
-#        return json_string
+        return json_string
         
 
     # 50 items per page on vlr.gg
@@ -304,7 +304,7 @@ class Vlr:
                 )
 
         data = {'matches' : matches}
-        json_string = json.dumps(data, sort_keys=True, indent=2)
+        json_string = json.dumps(data, sort_keys=False, indent=4)
         
         with open('vlr_upcoming.json', 'w') as outfile:
             outfile.write(json_string)
@@ -320,5 +320,5 @@ VLR = Vlr()
 
 VLR.vlr_match()
 
-#output = VLR.vlr_upcoming()
+output = VLR.vlr_upcoming()
 #print(output)
