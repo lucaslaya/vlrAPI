@@ -1,8 +1,9 @@
 # TODO
 # - vlr_upcoming
-#   - Add tourney url
+#   - missing data to scrape and add to json
+#       - tourney url
 # - vlr_match
-#   - missing data to add to scrape and add to json
+#   - missing data to scrape and add to json
 #       - vods
 #       - overview, performance, economy, comments 
 
