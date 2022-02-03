@@ -7,6 +7,7 @@
 #       - vods
 #       - overview, performance, economy, comments 
 
+from signal import pause
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -223,21 +224,25 @@ class Vlr:
 
         tab = 'overview'
 
-        for i in range(len(game)):
-            url = f'https://www.vlr.gg/{match_id}/?game={game[i]}&tab={tab}'
-            soup_stats, status_stats = getSoup(url)
+        url = f'https://www.vlr.gg/{match_id}/?tab={tab}'
+        soup_stats, status_stats = getSoup(url)
 
+        for i in range(len(game)):
             base_container_stats = soup_stats.find(id="wrapper")
             base_stats = base_container_stats.find("div", {"class": "col mod-3"})
 
             game_map = game_names[i]
 
             player_stats_container = base_stats.find("div", {"class": "vm-stats-container"})
-            player_stats = player_stats_container.find_all("table", {"class": "wf-table-inset"})
+            player_stats_game = player_stats_container.find("div", {"data-game-id": game[i]})
+            print(game[i])
+            player_stats = player_stats_game.find_all("table", {"class": "wf-table-inset"})
 
             # Team 1
             team1_stats_body = player_stats[0].find("tbody")
             team1_stats = team1_stats_body.find_all("tr")
+
+            #pause()
 
             for module in team1_stats:
                 player_name_team_container = module.find("td", {"class": "mod-player"})
