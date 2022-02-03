@@ -3,7 +3,7 @@
 #   - Add tourney url
 # - vlr_match
 #   - missing data to add to scrape and add to json
-#       - stream, vods
+#       - vods
 #       - overview, performance, economy, comments 
 
 import requests
@@ -137,7 +137,54 @@ class Vlr:
         #print(team1_score)
         #print(team2_score)
 
-        overview = performance = economy = comments = streams = vods = []
+        overview = performance = economy = comments = vods = []
+
+        # Streams
+        streams = []
+        stream_container = base.find("div", {"class": "match-streams-container"})
+
+        other_streams = stream_container.find_all("div", {"class": "wf-card"})
+
+        for module in other_streams:
+            stream_url = module.find("a").get("href")
+            stream_name = module.get_text().strip()
+
+            stream_flag_container = module.find("i")
+            stream_flag_dirty = stream_flag_container["class"]
+            stream_flag = stream_flag_dirty[0] + '_' + stream_flag_dirty[1].replace("mod-", "")
+
+            streams.append(
+                {
+                    "name": stream_name,
+                    "flag": stream_flag,
+                    "url": stream_url,
+                    "type": "twitch / other"
+                }
+            )
+
+        yt_streams = stream_container.find_all("a", {"class": "wf-card"})
+
+        for i in range(len(yt_streams)):
+            if yt_streams[i].get("href") == None:
+                temp = i
+        yt_streams.pop(temp)
+
+        for module in yt_streams:
+            stream_url = module.get("href")
+            stream_name = module.get_text().strip()
+
+            stream_flag_container = module.find("i")
+            stream_flag_dirty = stream_flag_container["class"]
+            stream_flag = stream_flag_dirty[0] + '_' + stream_flag_dirty[1].replace("mod-", "")
+
+            streams.append(
+                {
+                    "name": stream_name,
+                    "flag": stream_flag,
+                    "url": stream_url,
+                    "type": "youtube"
+                }
+            )
  
         data = {
             "match_info": {
