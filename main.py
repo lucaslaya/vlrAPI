@@ -21,8 +21,9 @@ base_vlr = Vlr()
 # Base Endpoint
 @app.route('/', methods=['GET'])
 def home():
-    return '''<h1>Distant Reading Archive</h1>
-<p>A prototype API for distant reading of science fiction novels.</p>'''
+    return ("vlrAPI.Beta.v1 \n made by lucasssssss#0001 \n"
+            +"API for vlr.gg made by webscraping the sites html \n" 
+            +"Feel free to DM me if there are any issues")
 
 # Match data Endpoint
 # DONE
@@ -34,9 +35,13 @@ def api_match():
     else:
         return "Error: No id field provided. Please specify an id.", 404
 
-    (date,time,patch,tourney,tourney_round,tourney_icon,tourney_url,match_format,
-    status,notes,team1,team1_elo,team1_url,team1_score,team2,team2_elo,team2_url,
-    team2_score,team1_icon,team2_icon,streams,vods,overview) = base_vlr.match(id)
+    try:
+        (date,time,patch,tourney,tourney_round,tourney_icon,tourney_url,match_format,
+        status,notes,team1,team1_elo,team1_url,team1_score,team2,team2_elo,team2_url,
+        team2_score,team1_icon,team2_icon,streams,vods,overview) = base_vlr.match(id)
+    except:
+        return "Error", 404
+
     
     data = {
         "match_info": {
@@ -101,7 +106,7 @@ def api_team():
         "match_data": match_data    # List
     }
     
-    return jsonify({"team": data})
+    return jsonify({"team": data}), 200
 
 # Upcoming matches Endpoint
 @app.route('/upcoming/match', methods=['GET'])
