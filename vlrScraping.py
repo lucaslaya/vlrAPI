@@ -545,13 +545,25 @@ class Vlr:
                 tourney_placement = tourney_placement.replace("\n", "")
                 tourney_placement = tourney_placement.replace("\t", "")
 
+                tourney_text = tourneys.get_text().strip()
+                tourney_prize_year_container = tourney_text[tourney_text.find('$'):]
+                tourney_prize_year = tourney_prize_year_container.split("\n", 1)
 
+                try:
+                    tourney_prize = tourney_prize_year[0]
+                    tourney_year = tourney_prize_year[1]
+                    tourney_year = tourney_year.replace("\n", "")
+                    tourney_year = tourney_year.replace("\t", "")
+                except:
+                    tourney_prize = "-"
+                    tourney_year_container = tourneys.find_all("div")
+                    tourney_year = tourney_year_container[len(tourney_year_container)-1].get_text().strip()
 
                 tournaments.append({
                     "name": tourney_name,
                     "placement": tourney_placement,
-                    #"prize": tourney_prize,
-                    #"year": tourney_year,
+                    "prize": tourney_prize,
+                    "year": tourney_year,
                     "url": tourney_url
                 })
 
@@ -575,6 +587,19 @@ class Vlr:
                     "tournament_placements": tournaments # List
                 }
             }
+
+        elif type == "stats":
+            stats_base_container = base_container.find("div", class_="wf-card")
+            stats_container = stats_base_container[1]. find("tbody")
+
+            print(stats_container)
+
+            match_data_out = {}
+        elif type == "matches":
+            match_data_out = {}
+        elif type == "transactions":
+            match_data_out = {}
+
         
 
         return (
@@ -587,3 +612,6 @@ class Vlr:
             logo_out,
             match_data_out
         )
+
+#v = Vlr()
+#v.team(2, "overview")
